@@ -19,7 +19,7 @@ type Entity struct {
 }
 
 func (e Entity) GetEntity() C.dds_entity_t {
-	return C.dds_entity_t(e.ent)
+	return e.ent
 }
 func (e *Entity) delete() error {
 	ret := C.dds_delete(e.GetEntity())
