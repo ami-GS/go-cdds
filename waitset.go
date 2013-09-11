@@ -6,7 +6,9 @@ package cdds
 #include "ddsc/dds.h"
 */
 import "C"
-import "time"
+import (
+	"time"
+)
 
 type WaitSet struct {
 	Entity
@@ -15,13 +17,13 @@ type WaitSet struct {
 
 func (w *WaitSet) Wait(size int, d time.Duration) (*RawArray, error) {
 	// TODO: to return RawArray in stead of array of Attach is not convenient?
-	wsresults := w.allocator.AllocArray(uint32(size))
+	attachArray := w.allocator.AllocArray(uint32(size))
 
-	ret := C.dds_waitset_wait(w.GetEntity(), (*C.dds_attach_t)(wsresults.head), C.size_t(size), C.dds_duration_t(int64(d)))
+	ret := C.dds_waitset_wait(w.GetEntity(), (*C.dds_attach_t)(attachArray.head), C.size_t(size), C.dds_duration_t(int64(d)))
 	if ret < 0 {
 		return nil, CddsErrorType(ret)
 	}
-	return wsresults, nil
+	return attachArray, nil
 
 }
 
