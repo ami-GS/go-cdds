@@ -51,6 +51,19 @@ func CreateWriter(participant Participant, topic Topic, qos *QoS, listener *List
 	return Writer(tmp)
 }
 
+func (w Writer) SetEnabledStatus(mask uint32) Return {
+	ret := C.dds_set_enabled_status(C.dds_entity_t(w), C.uint32_t(mask))
+	ErrorCheck(ret, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
+	return Return(ret)
+}
+
+func (w Writer) GetStatusChanges() uint32 {
+	var status uint32
+	ret := C.dds_get_status_changes(C.dds_entity_t(w), (*C.uint32_t)(&status))
+	ErrorCheck(ret, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
+	return status
+}
+
 func (w Writer) Write(data unsafe.Pointer) {
 	ret := C.dds_write(C.dds_entity_t(w), data)
 	ErrorCheck(ret, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
@@ -102,19 +115,6 @@ func (a *SampleAllocator) Alloc() unsafe.Pointer /*error*/ {
 
 func (a *SampleAllocator) Free(sample unsafe.Pointer) /*error*/ {
 	C.dds_sample_free(sample, (*C.dds_topic_descriptor_t)(a.desc), C.DDS_FREE_ALL)
-}
-
-func SetEnabledStatus(writer Writer, mask uint32) Return {
-	ret := C.dds_set_enabled_status(C.dds_entity_t(writer), C.uint32_t(mask))
-	ErrorCheck(ret, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
-	return Return(ret)
-}
-
-func GetStatusChanges(writer Writer) uint32 {
-	var status uint32
-	ret := C.dds_get_status_changes(C.dds_entity_t(writer), (*C.uint32_t)(&status))
-	ErrorCheck(ret, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
-	return status
 }
 
 func SleepFor(n time.Duration) {
