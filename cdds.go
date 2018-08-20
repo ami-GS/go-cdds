@@ -11,7 +11,6 @@ import (
 	"unsafe"
 )
 
-type Participant C.dds_entity_t
 type Topic C.dds_entity_t
 type Writer C.dds_entity_t
 type Reader C.dds_entity_t
@@ -34,23 +33,8 @@ func CreateListener(arg unsafe.Pointer) *Listener {
 	return (*Listener)(C.dds_listener_create(arg))
 }
 
-func CreateParticipant(domainID DomainID, qos *QoS, listener *Listener) Participant {
-	tmp := C.dds_create_participant((C.dds_domainid_t)(domainID), (*C.dds_qos_t)(qos), (*C.dds_listener_t)(listener))
-	ErrorCheck(tmp, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
-	return Participant(tmp)
-}
-
-func (p Participant) GetEntity() C.dds_entity_t {
-	return C.dds_entity_t(p)
-}
-
-func (p Participant) Delete() {
-	ret := C.dds_delete(C.dds_entity_t(p))
-	ErrorCheck(ret, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
-}
-
 func CreateTopic(participant Participant, desc unsafe.Pointer, name string, qos *QoS, listener *Listener) Topic {
-	tmp := C.dds_create_topic(C.dds_entity_t(participant), (*C.dds_topic_descriptor_t)(desc), C.CString(name), (*C.dds_qos_t)(qos), (*C.dds_listener_t)(listener))
+	tmp := C.dds_create_topic(participant.GetEntity(), (*C.dds_topic_descriptor_t)(desc), C.CString(name), (*C.dds_qos_t)(qos), (*C.dds_listener_t)(listener))
 
 	ErrorCheck(tmp, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
 	return Topic(tmp)

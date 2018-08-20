@@ -7,12 +7,12 @@ package cdds
 */
 import "C"
 
-type EntityI interface {
-	GetEntity() C.dds_entity_t
+type Participant struct {
+	Entity
 }
 
-type Entity C.dds_entity_t
-
-func (e Entity) GetEntity() C.dds_entity_t {
-	return C.dds_entity_t(e)
+func CreateParticipant(domainID DomainID, qos *QoS, listener *Listener) Participant {
+	tmp := C.dds_create_participant((C.dds_domainid_t)(domainID), (*C.dds_qos_t)(qos), (*C.dds_listener_t)(listener))
+	ErrorCheck(tmp, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
+	return Participant{Entity(tmp)}
 }
