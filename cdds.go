@@ -129,7 +129,3 @@ func (a *SampleAllocator) Alloc() unsafe.Pointer /*error*/ {
 func (a *SampleAllocator) Free(sample unsafe.Pointer) /*error*/ {
 	C.dds_sample_free(sample, (*C.dds_topic_descriptor_t)(a.desc), C.DDS_FREE_ALL)
 }
-
-func SleepFor(n time.Duration) {
-	C.dds_sleepfor(C.int64_t(int64(n)))
-}
