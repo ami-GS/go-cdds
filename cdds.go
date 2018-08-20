@@ -15,6 +15,7 @@ type Participant C.dds_entity_t
 type Topic C.dds_entity_t
 type Writer C.dds_entity_t
 type Reader C.dds_entity_t
+type ReadCondition C.dds_entity_t
 
 //TODO: can be error?
 type Return C.dds_return_t
@@ -26,6 +27,8 @@ type Listener C.dds_listener_t
 type TopicDescriptor C.dds_topic_descriptor_t
 type SampleInfo C.dds_sample_info_t
 type Sample unsafe.Pointer
+type Attach C.dds_attach_t
+
 // originally argument is void* arg
 func CreateListener(arg unsafe.Pointer) *Listener {
 	return (*Listener)(C.dds_listener_create(arg))
@@ -90,6 +93,10 @@ func CreateReader(participant EntityI, topic Topic, qos *QoS, listener *Listener
 func (r Reader) Read(samples *unsafe.Pointer, info *SampleInfo, bufsz int, maxsz uint32) Return {
 	ret := C.dds_read(C.dds_entity_t(r), samples, (*C.dds_sample_info_t)(info), C.size_t(bufsz), C.uint32_t(maxsz))
 	return Return(ret)
+}
+
+func (r Reader) CreateReadCondition(mask uint32) ReadCondition {
+	return ReadCondition(C.dds_create_readcondition(C.dds_entity_t(r), C.uint32_t(mask)))
 }
 
 func CreateQoS() *QoS {
