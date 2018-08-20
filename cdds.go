@@ -37,6 +37,10 @@ func CreateParticipant(domainID DomainID, qos *QoS, listener *Listener) Particip
 	return Participant(tmp)
 }
 
+func (p Participant) GetEntity() C.dds_entity_t {
+	return C.dds_entity_t(p)
+}
+
 func (p Participant) Delete() {
 	ret := C.dds_delete(C.dds_entity_t(p))
 	ErrorCheck(ret, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
@@ -49,14 +53,14 @@ func CreateTopic(participant Participant, desc unsafe.Pointer, name string, qos 
 	return Topic(tmp)
 }
 
-func CreateWriter(participant Participant, topic Topic, qos *QoS, listener *Listener) Writer {
-	tmp := C.dds_create_writer((C.dds_entity_t)(participant), (C.dds_entity_t)(topic), (*C.dds_qos_t)(qos), (*C.dds_listener_t)(listener))
+func CreateWriter(participant EntityI, topic Topic, qos *QoS, listener *Listener) Writer {
+	tmp := C.dds_create_writer(participant.GetEntity(), (C.dds_entity_t)(topic), (*C.dds_qos_t)(qos), (*C.dds_listener_t)(listener))
 	ErrorCheck(tmp, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
 	return Writer(tmp)
 }
 
-func (w Writer) SetEnabledStatus(mask uint32) Return {
-	ret := C.dds_set_enabled_status(C.dds_entity_t(w), C.uint32_t(mask))
+func SetEnabledStatus(entity EntityI, mask uint32) Return {
+	ret := C.dds_set_enabled_status(entity.GetEntity(), C.uint32_t(mask))
 	ErrorCheck(ret, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
 	return Return(ret)
 }
@@ -68,13 +72,17 @@ func (w Writer) GetStatusChanges() uint32 {
 	return status
 }
 
+func (w Writer) GetEntity() C.dds_entity_t {
+	return C.dds_entity_t(w)
+}
+
 func (w Writer) Write(data unsafe.Pointer) {
 	ret := C.dds_write(C.dds_entity_t(w), data)
 	ErrorCheck(ret, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
 }
 
-func CreateReader(participant Participant, topic Topic, qos *QoS, listener *Listener) Reader {
-	tmp := C.dds_create_reader((C.dds_entity_t)(participant), (C.dds_entity_t)(topic), (*C.dds_qos_t)(qos), (*C.dds_listener_t)(listener))
+func CreateReader(participant EntityI, topic Topic, qos *QoS, listener *Listener) Reader {
+	tmp := C.dds_create_reader(participant.GetEntity(), (C.dds_entity_t)(topic), (*C.dds_qos_t)(qos), (*C.dds_listener_t)(listener))
 	ErrorCheck(tmp, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
 	return Reader(tmp)
 }
