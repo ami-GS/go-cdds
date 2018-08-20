@@ -11,10 +11,8 @@ import (
 	"unsafe"
 )
 
-type Topic C.dds_entity_t
-type Writer C.dds_entity_t
-type Reader C.dds_entity_t
-type ReadCondition C.dds_entity_t
+type Topic Entity
+type ReadCondition Entity
 
 //TODO: can be error?
 type Return C.dds_return_t
@@ -40,57 +38,10 @@ func CreateTopic(participant Participant, desc unsafe.Pointer, name string, qos 
 	return Topic(tmp)
 }
 
-func CreateWriter(participant EntityI, topic Topic, qos *QoS, listener *Listener) Writer {
-	tmp := C.dds_create_writer(participant.GetEntity(), (C.dds_entity_t)(topic), (*C.dds_qos_t)(qos), (*C.dds_listener_t)(listener))
-	ErrorCheck(tmp, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
-	return Writer(tmp)
-}
-
 func SetEnabledStatus(entity EntityI, mask uint32) Return {
 	ret := C.dds_set_enabled_status(entity.GetEntity(), C.uint32_t(mask))
 	ErrorCheck(ret, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
 	return Return(ret)
-}
-
-func (w Writer) GetStatusChanges() uint32 {
-	var status uint32
-	ret := C.dds_get_status_changes(C.dds_entity_t(w), (*C.uint32_t)(&status))
-	ErrorCheck(ret, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
-	return status
-}
-
-func (w Writer) GetEntity() C.dds_entity_t {
-	return C.dds_entity_t(w)
-}
-
-func (w Writer) Write(data unsafe.Pointer) {
-	ret := C.dds_write(C.dds_entity_t(w), data)
-	ErrorCheck(ret, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
-}
-
-func (w Writer) WriteTimeStampe(data unsafe.Pointer, ts Time) {
-	ret := C.dds_write_ts(C.dds_entity_t(w), data, C.dds_time_t(ts))
-	ErrorCheck(ret, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
-}
-
-func (w Writer) WriteDispose(data unsafe.Pointer) {
-	ret := C.dds_writedispose(C.dds_entity_t(w), data)
-	ErrorCheck(ret, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
-}
-
-func CreateReader(participant EntityI, topic Topic, qos *QoS, listener *Listener) Reader {
-	tmp := C.dds_create_reader(participant.GetEntity(), (C.dds_entity_t)(topic), (*C.dds_qos_t)(qos), (*C.dds_listener_t)(listener))
-	ErrorCheck(tmp, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
-	return Reader(tmp)
-}
-
-func (r Reader) Read(samples *unsafe.Pointer, info *SampleInfo, bufsz int, maxsz uint32) Return {
-	ret := C.dds_read(C.dds_entity_t(r), samples, (*C.dds_sample_info_t)(info), C.size_t(bufsz), C.uint32_t(maxsz))
-	return Return(ret)
-}
-
-func (r Reader) CreateReadCondition(mask uint32) ReadCondition {
-	return ReadCondition(C.dds_create_readcondition(C.dds_entity_t(r), C.uint32_t(mask)))
 }
 
 func CreateQoS() *QoS {
