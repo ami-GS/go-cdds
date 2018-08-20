@@ -25,7 +25,7 @@ func main() {
 	writer = cdds.CreateWriter(participant, topic, nil, nil)
 	fmt.Println("=== [Publisher] Waiting for a reader to be discovered ...")
 
-	writer.SetEnabledStatus(C.DDS_PUBLICATION_MATCHED_STATUS)
+	cdds.SetEnabledStatus(writer, C.DDS_PUBLICATION_MATCHED_STATUS)
 
 	for {
 		status := writer.GetStatusChanges()
