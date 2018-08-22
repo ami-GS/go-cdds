@@ -21,6 +21,13 @@ func (e Entity) Delete() {
 	ErrorCheck(ret, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
 }
 
+func (e Entity) GetStatusChanges() uint32 {
+	var status uint32
+	ret := C.dds_get_status_changes(e.GetEntity(), (*C.uint32_t)(&status))
+	ErrorCheck(ret, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
+	return status
+}
+
 func (e Entity) SetEnabledStatus(mask uint32) Return {
 	ret := C.dds_set_enabled_status(e.GetEntity(), C.uint32_t(mask))
 	ErrorCheck(ret, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
