@@ -39,11 +39,11 @@ func (qos *QoS) SetReliability(rel Reliability, n time.Duration) {
 	C.dds_qset_reliability((*C.dds_qos_t)(qos), C.dds_reliability_kind_t(rel), C.int64_t(int64(n)))
 }
 
-func (qos *QoS) QsetWriterDataLifecycle(autoDispose bool) {
+func (qos *QoS) SetWriterDataLifecycle(autoDispose bool) {
 	C.dds_qset_writer_data_lifecycle((*C.dds_qos_t)(qos), C.bool(autoDispose))
 }
 
-func (qos *QoS) QsetPartition(num int, partitions *string) {
+func (qos *QoS) SetPartition(num int, partitions *string) {
 	C.dds_qset_partition((*C.dds_qos_t)(qos), C.uint32_t(num), (**C.char)(unsafe.Pointer(partitions)))
 
 }
