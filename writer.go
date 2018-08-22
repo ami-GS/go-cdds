@@ -12,12 +12,6 @@ type Writer struct {
 	Entity
 }
 
-func CreateWriter(participant EntityI, topic Topic, qos *QoS, listener *Listener) Writer {
-	tmp := C.dds_create_writer(participant.GetEntity(), (C.dds_entity_t)(topic), (*C.dds_qos_t)(qos), (*C.dds_listener_t)(listener))
-	ErrorCheck(tmp, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
-	return Writer{Entity(tmp)}
-}
-
 func (w Writer) Write(data unsafe.Pointer) {
 	ret := C.dds_write(w.GetEntity(), data)
 	ErrorCheck(ret, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")

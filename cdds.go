@@ -31,13 +31,6 @@ func CreateListener(arg unsafe.Pointer) *Listener {
 	return (*Listener)(C.dds_listener_create(arg))
 }
 
-func CreateTopic(participant Participant, desc unsafe.Pointer, name string, qos *QoS, listener *Listener) Topic {
-	tmp := C.dds_create_topic(participant.GetEntity(), (*C.dds_topic_descriptor_t)(desc), C.CString(name), (*C.dds_qos_t)(qos), (*C.dds_listener_t)(listener))
-
-	ErrorCheck(tmp, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
-	return Topic(tmp)
-}
-
 func CreateQoS() *QoS {
 	return (*QoS)(C.dds_qos_create())
 }
