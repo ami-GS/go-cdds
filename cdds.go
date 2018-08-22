@@ -38,12 +38,6 @@ func CreateTopic(participant Participant, desc unsafe.Pointer, name string, qos 
 	return Topic(tmp)
 }
 
-func SetEnabledStatus(entity EntityI, mask uint32) Return {
-	ret := C.dds_set_enabled_status(entity.GetEntity(), C.uint32_t(mask))
-	ErrorCheck(ret, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
-	return Return(ret)
-}
-
 func CreateQoS() *QoS {
 	return (*QoS)(C.dds_qos_create())
 }

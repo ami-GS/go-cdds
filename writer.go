@@ -18,13 +18,6 @@ func CreateWriter(participant EntityI, topic Topic, qos *QoS, listener *Listener
 	return Writer{Entity(tmp)}
 }
 
-func (w Writer) GetStatusChanges() uint32 {
-	var status uint32
-	ret := C.dds_get_status_changes(w.GetEntity(), (*C.uint32_t)(&status))
-	ErrorCheck(ret, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
-	return status
-}
-
 func (w Writer) Write(data unsafe.Pointer) {
 	ret := C.dds_write(w.GetEntity(), data)
 	ErrorCheck(ret, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
