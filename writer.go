@@ -17,7 +17,7 @@ func (w Writer) Write(data unsafe.Pointer) {
 	ErrorCheck(ret, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
 }
 
-func (w Writer) WriteTimeStampe(data unsafe.Pointer, ts Time) {
+func (w Writer) WriteTimeStamp(data unsafe.Pointer, ts Time) {
 	ret := C.dds_write_ts(w.GetEntity(), data, C.dds_time_t(ts))
 	ErrorCheck(ret, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
 }
