@@ -8,3 +8,16 @@ package cdds
 import "C"
 
 const DomainDefault = C.DDS_DOMAIN_DEFAULT
+
+type Reliability C.dds_reliability_kind_t
+
+const (
+	BestEffort Reliability = C.DDS_RELIABILITY_BEST_EFFORT
+	Reliable   Reliability = C.DDS_RELIABILITY_RELIABLE
+)
+
+type CommunicationStatus C.uint32_t
+
+const (
+	PublicationMatched CommunicationStatus = C.DDS_PUBLICATION_MATCHED_STATUS
+)
