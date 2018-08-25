@@ -13,9 +13,9 @@ import (
 // TODO: participant to be interface? ParticipantI
 type Participant struct {
 	Entity
-	topicEntityToName map[Topic]string
-	topicNameToEntity map[string]Topic
-	topicInfos        map[Topic]*TopicAccessor
+	topicEntityToName map[*Topic]string
+	topicNameToEntity map[string]*Topic
+	topicInfos        map[*Topic]*TopicAccessor
 
 	// TODO: currently participant:pub/sub = 1:1, but should be 1:n/m
 	Publisher  Publisher
@@ -31,9 +31,9 @@ func CreateParticipant(domainID DomainID, qos *QoS, listener *Listener) (*Partic
 	ErrorCheck(tmp, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
 	return &Participant{
 		Entity:            Entity(tmp),
-		topicEntityToName: make(map[Topic]string),
-		topicNameToEntity: make(map[string]Topic),
-		topicInfos:        make(map[Topic]*TopicAccessor),
+		topicEntityToName: make(map[*Topic]string),
+		topicNameToEntity: make(map[string]*Topic),
+		topicInfos:        make(map[*Topic]*TopicAccessor),
 	}, nil
 }
 
