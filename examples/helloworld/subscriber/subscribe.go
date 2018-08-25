@@ -22,6 +22,7 @@ func main() {
 	var infos [MAX_SAMPLES]cdds.SampleInfo
 	var msg *C.HelloWorldData_Msg
 	participant := cdds.CreateParticipant(cdds.DomainDefault, nil, nil)
+	defer participant.Delete()
 
 	_ = participant.CreateTopic(unsafe.Pointer(&C.HelloWorldData_Msg_desc), "HelloWorldData_Msg", nil, nil)
 	qos := cdds.CreateQoS()
@@ -44,8 +45,4 @@ func main() {
 		}
 		cdds.SleepFor(time.Millisecond * 20)
 	}
-
-	allocator.Free(samples[0])
-	participant.Delete()
-
 }

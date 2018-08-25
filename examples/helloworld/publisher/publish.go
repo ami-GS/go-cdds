@@ -19,6 +19,8 @@ func main() {
 	var msg C.HelloWorldData_Msg
 
 	participant := cdds.CreateParticipant(cdds.DomainDefault, nil, nil)
+	defer participant.Delete()
+
 	participant.CreateTopic(unsafe.Pointer(&C.HelloWorldData_Msg_desc), "HelloWorldData_Msg", nil, nil)
 	writer := participant.CreateWriter("HelloWorldData_Msg", nil, nil)
 	fmt.Println("=== [Publisher] Waiting for a reader to be discovered ...")

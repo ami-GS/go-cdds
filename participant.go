@@ -157,3 +157,12 @@ func (p *Participant) CreateSubscriber(qos *QoS, listener *Listener) {
 	ErrorCheck(sub, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
 	p.Subscriber = Subscriber(sub)
 }
+
+func (p *Participant) Delete() {
+	for _, accessor := range p.topicInfos {
+		if accessor.Reader.IsInitialized() {
+			accessor.Reader.Delete()
+		}
+	}
+	p.Entity.Delete()
+}
