@@ -20,14 +20,14 @@ func main() {
 
 	participant := cdds.CreateParticipant(cdds.DomainDefault, nil, nil)
 	participant.CreateTopic(unsafe.Pointer(&C.HelloWorldData_Msg_desc), "HelloWorldData_Msg", nil, nil)
-	participant.CreateWriter(nil, nil)
+	writer := participant.CreateWriter("HelloWorldData_Msg", nil, nil)
 	fmt.Println("=== [Publisher] Waiting for a reader to be discovered ...")
 
-	participant.Writer.SetEnabledStatus(C.DDS_PUBLICATION_MATCHED_STATUS)
+	writer.SetEnabledStatus(cdds.PublicationMatched)
 
 	for {
-		status := participant.Writer.GetStatusChanges()
-		if status == C.DDS_PUBLICATION_MATCHED_STATUS {
+		status := writer.GetStatusChanges()
+		if status == cdds.PublicationMatched {
 			break
 		}
 		cdds.SleepFor(time.Millisecond * 20)
@@ -36,7 +36,6 @@ func main() {
 	msg.message = C.CString("Hello World!")
 	fmt.Println("=== [Publisher] Writing : ")
 	fmt.Printf("Message (%d, %s)\n", msg.userID, C.GoString(msg.message))
-	participant.Writer.Write(unsafe.Pointer(&msg))
-	participant.Delete()
+	writer.Write(unsafe.Pointer(&msg))
 
 }
