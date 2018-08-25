@@ -19,5 +19,6 @@ const (
 type CommunicationStatus C.uint32_t
 
 const (
+	CommunicationNil   CommunicationStatus = 0
 	PublicationMatched CommunicationStatus = C.DDS_PUBLICATION_MATCHED_STATUS
 )
