@@ -7,7 +7,6 @@ package cdds
 */
 import "C"
 import (
-	"sync"
 	"time"
 	"unsafe"
 )
@@ -57,56 +56,3 @@ func (info *SampleInfo) IsValid() bool {
 	return bool((*C.dds_sample_info_t)(info).valid_data)
 }
 
-// need class which has alocater/free for specific desc?
-type SampleAllocator struct {
-	size         uintptr
-	desc         unsafe.Pointer
-	mut          *sync.Mutex
-	allockedList []unsafe.Pointer
-}
-
-func NewSampleAllocator(desc unsafe.Pointer, size uintptr) *SampleAllocator {
-	return &SampleAllocator{
-		size:         size,
-		desc:         desc,
-		mut:          new(sync.Mutex),
-		allockedList: make([]unsafe.Pointer, 0),
-	}
-}
-
-func (a *SampleAllocator) Alloc(num uint32) unsafe.Pointer /*error*/ {
-	a.mut.Lock()
-	defer a.mut.Unlock()
-	allocked := unsafe.Pointer(C.dds_alloc(C.ulong(a.size * uintptr(num))))
-	a.allockedList = append(a.allockedList, allocked)
-	return allocked
-}
-
-func (a *SampleAllocator) Free(sample unsafe.Pointer) /*error*/ {
-	a.mut.Lock()
-	defer a.mut.Unlock()
-
-	C.dds_sample_free(sample, (*C.dds_topic_descriptor_t)(a.desc), C.DDS_FREE_ALL)
-	var i int
-	var pointer unsafe.Pointer
-	for i, pointer = range a.allockedList {
-		if pointer == sample {
-			break
-		}
-	}
-	// remove entry (change order)
-	lastIdx := len(a.allockedList) - 1
-	a.allockedList[i] = a.allockedList[lastIdx]
-	a.allockedList[lastIdx] = nil
-	a.allockedList = a.allockedList[:lastIdx]
-
-}
-
-func (a *SampleAllocator) AllFree() {
-	a.mut.Lock()
-	defer a.mut.Unlock()
-
-	for _, allocked := range a.allockedList {
-		C.dds_sample_free(allocked, (*C.dds_topic_descriptor_t)(a.desc), C.DDS_FREE_ALL)
-	}
-}
