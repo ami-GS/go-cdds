@@ -18,31 +18,53 @@ import (
 const MAX_SAMPLES = 1
 
 func main() {
-	var samples [MAX_SAMPLES]unsafe.Pointer
-	var infos [MAX_SAMPLES]cdds.SampleInfo
 	var msg *C.HelloWorldData_Msg
-	participant := cdds.CreateParticipant(cdds.DomainDefault, nil, nil)
+	participant, err := cdds.CreateParticipant(cdds.DomainDefault, nil, nil)
 	defer participant.Delete()
+	if err != nil {
+		panic(err)
+	}
 
-	_ = participant.CreateTopic(unsafe.Pointer(&C.HelloWorldData_Msg_desc), "HelloWorldData_Msg", nil, nil)
+	_, err = participant.CreateTopic(unsafe.Pointer(&C.HelloWorldData_Msg_desc), "HelloWorldData_Msg", nil, nil)
+	if err != nil {
+		panic(err)
+	}
 	qos := cdds.CreateQoS()
 	qos.SetReliability(cdds.Reliable, time.Second*10)
-	reader := participant.CreateReader("HelloWorldData_Msg", unsafe.Sizeof(*msg), qos, nil)
+	reader, err := participant.CreateReader("HelloWorldData_Msg", uint32(unsafe.Sizeof(*msg)), qos, nil)
+	if err != nil {
+		panic(err)
+	}
 	qos.Delete()
 	fmt.Println("=== [Subscriber] Waiting for sample ...")
 
-	allocator := cdds.NewSampleAllocator(unsafe.Pointer(&C.HelloWorldData_Msg_desc), unsafe.Sizeof(*msg))
-	samples[0] = allocator.Alloc()
+	// finCh := make(chan error)
+	// go reader.ReadWithCallback(MAX_SAMPLES, MAX_SAMPLES, &finCh, func(samples *cdds.Array) {
+	// 	msg = (*C.HelloWorldData_Msg)(samples.At(0))
+	// 	fmt.Printf("Message (%d, %s)\n", msg.userID, C.GoString(msg.message))
+	// })
+	// err <-finCh
+	// if err != nil {
+	// panic(err)
+	// }
 
-	for {
-		samples[0] = reader.AllocRead(&infos[0], MAX_SAMPLES, MAX_SAMPLES)
-		if infos[0].IsValid() {
-			/* Print Message. */
-			msg = (*C.HelloWorldData_Msg)(samples[0])
-			fmt.Print("=== [Subscriber] Received : ")
-			fmt.Printf("Message (%d, %s)\n", msg.userID, C.GoString(msg.message))
-			break
-		}
-		cdds.SleepFor(time.Millisecond * 20)
+	sample, err := reader.BlockAllocRead(MAX_SAMPLES, MAX_SAMPLES)
+	if err != nil {
+		panic(err)
 	}
+	msg = (*C.HelloWorldData_Msg)(sample.At(0))
+	fmt.Print("=== [Subscriber] Received : ")
+	fmt.Printf("Message (%d, %s)\n", msg.userID, C.GoString(msg.message))
+
+	// for {
+	// 	samples := reader.AllocRead(MAX_SAMPLES, MAX_SAMPLES)
+	// 	if samples.IsValidAt(0) {
+	// 		/* Print Message. */
+	// 		msg = (*C.HelloWorldData_Msg)(samples.At(0))
+	// 		fmt.Print("=== [Subscriber] Received : ")
+	// 		fmt.Printf("Message (%d, %s)\n", msg.userID, C.GoString(msg.message))
+	// 		break
+	// 	}
+	// 	cdds.SleepFor(time.Millisecond * 20)
+	// }
 }

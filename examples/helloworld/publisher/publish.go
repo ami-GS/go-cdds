@@ -18,17 +18,30 @@ import (
 func main() {
 	var msg C.HelloWorldData_Msg
 
-	participant := cdds.CreateParticipant(cdds.DomainDefault, nil, nil)
+	participant, err := cdds.CreateParticipant(cdds.DomainDefault, nil, nil)
 	defer participant.Delete()
+	if err != nil {
+		panic(err)
+	}
 
-	participant.CreateTopic(unsafe.Pointer(&C.HelloWorldData_Msg_desc), "HelloWorldData_Msg", nil, nil)
-	writer := participant.CreateWriter("HelloWorldData_Msg", nil, nil)
+	_, err = participant.CreateTopic(unsafe.Pointer(&C.HelloWorldData_Msg_desc), "HelloWorldData_Msg", nil, nil)
+	if err != nil {
+		panic(err)
+	}
+	writer, err := participant.CreateWriter("HelloWorldData_Msg", nil, nil)
+	if err != nil {
+		panic(err)
+	}
 	fmt.Println("=== [Publisher] Waiting for a reader to be discovered ...")
 
-	writer.SetEnabledStatus(cdds.PublicationMatched)
+	//writer.SearchTopic(time.Millisecond * 20)
 
+	writer.SetEnabledStatus(cdds.PublicationMatched)
 	for {
-		status := writer.GetStatusChanges()
+		status, err := writer.GetStatusChanges()
+		if err != nil {
+			panic(err)
+		}
 		if status == cdds.PublicationMatched {
 			break
 		}
