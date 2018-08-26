@@ -22,8 +22,6 @@ type QoS C.dds_qos_t
 type Listener C.dds_listener_t
 
 //type TopicDescriptor C.dds_topic_descriptor_t
-type SampleInfo C.dds_sample_info_t
-type Sample unsafe.Pointer
 type Attach C.dds_attach_t
 
 // originally argument is void* arg
@@ -51,8 +49,3 @@ func (qos *QoS) SetPartition(num int, partitions *string) {
 func (qos *QoS) Delete() {
 	C.dds_qos_delete((*C.dds_qos_t)(qos))
 }
-
-func (info *SampleInfo) IsValid() bool {
-	return bool((*C.dds_sample_info_t)(info).valid_data)
-}
-
