@@ -84,11 +84,37 @@ func (p *Participant) CreateReader(topic interface{}, elmSize uint32, qos *QoS, 
 	if ac, ok := p.topicInfos[topicEntity]; ok {
 		ac.Reader = Reader{
 			Entity:    Entity(tmp),
-			allocator: NewSampleAllocator(topicEntity.desc, size),
+			allocator: NewSampleAllocator(topicEntity.desc, elmSize),
 		}
 		return &ac.Reader, nil
 	}
 	panic("topic was not created")
+}
+
+func (p *Participant) GetOrCreateReader(topic interface{}, elmSize uint32, qos *QoS, listener *Listener) (*Reader, error) {
+	var topicEntity *Topic
+	var ok bool
+	switch t := topic.(type) {
+	case string:
+		topicEntity, ok = p.topicNameToEntity[t]
+		if !ok {
+			panic("topic was not created")
+		}
+	case *Topic:
+		topicEntity = t
+	default:
+		panic("1st argument of CreateWriter need to be string or *cdds.Topic")
+	}
+
+	acc, ok := p.topicInfos[topicEntity]
+	if !ok {
+		panic("topic was not created")
+	}
+	if !acc.Reader.IsInitialized() {
+		return p.CreateReader(topic, elmSize, qos, listener)
+	}
+
+	return &acc.Reader, nil
 }
 
 func (p *Participant) CreateWriter(topic interface{}, qos *QoS, listener *Listener) (*Writer, error) {
