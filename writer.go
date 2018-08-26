@@ -6,23 +6,53 @@ package cdds
 #include "ddsc/dds.h"
 */
 import "C"
-import "unsafe"
+import (
+	"time"
+	"unsafe"
+)
 
 type Writer struct {
 	Entity
 }
 
-func (w Writer) Write(data unsafe.Pointer) {
+func (w Writer) Write(data unsafe.Pointer) error {
 	ret := C.dds_write(w.GetEntity(), data)
 	ErrorCheck(ret, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
+	if ret < 0 {
+		return CddsErrorType(ret)
+	}
+	return nil
 }
 
-func (w Writer) WriteTimeStamp(data unsafe.Pointer, ts Time) {
+func (w Writer) WriteTimeStamp(data unsafe.Pointer, ts Time) error {
 	ret := C.dds_write_ts(w.GetEntity(), data, C.dds_time_t(ts))
-	ErrorCheck(ret, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
+	if ret < 0 {
+		return CddsErrorType(ret)
+	}
+	return nil
 }
 
-func (w Writer) WriteDispose(data unsafe.Pointer) {
+func (w Writer) WriteDispose(data unsafe.Pointer) error {
 	ret := C.dds_writedispose(w.GetEntity(), data)
-	ErrorCheck(ret, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
+	if ret < 0 {
+		return CddsErrorType(ret)
+	}
+	return nil
+}
+
+func (w *Writer) SearchTopic(d time.Duration) error {
+	// need mutex lock?
+	// WARN: this cause error
+	w.SetEnabledStatus(PublicationMatched)
+	for {
+		status, err := w.GetStatusChanges()
+		if err != nil {
+			return err
+		}
+		if status == PublicationMatched {
+			break
+		}
+		time.Sleep(d)
+	}
+	return nil
 }
