@@ -13,7 +13,6 @@ import (
 // TODO: participant to be interface? ParticipantI
 type Participant struct {
 	Entity
-	topicEntityToName map[*Topic]string
 	topicNameToEntity map[string]*Topic
 	topicInfos        map[*Topic]*TopicAccessor
 
@@ -31,7 +30,6 @@ func CreateParticipant(domainID DomainID, qos *QoS, listener *Listener) (*Partic
 	ErrorCheck(tmp, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
 	return &Participant{
 		Entity:            Entity(tmp),
-		topicEntityToName: make(map[*Topic]string),
 		topicNameToEntity: make(map[string]*Topic),
 		topicInfos:        make(map[*Topic]*TopicAccessor),
 	}, nil
@@ -50,9 +48,9 @@ func (p *Participant) CreateTopic(desc unsafe.Pointer, name string, qos *QoS, li
 	topic := &Topic{
 		Entity: Entity(tmp),
 		desc:   desc,
+		name:   name,
 	}
 
-	p.topicEntityToName[topic] = name
 	p.topicNameToEntity[name] = topic
 	p.topicInfos[topic] = &TopicAccessor{}
 	return topic, nil
