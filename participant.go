@@ -212,7 +212,14 @@ func (p *Participant) CreateSubscriber(qos *QoS, listener *Listener) (*Subscribe
 	return &sub, nil
 }
 
+func (p *Participant) CreateWaitSet() (*WaitSet, error) {
+	tmp := C.dds_create_waitset(p.GetEntity())
+	if tmp < 0 {
+		return nil, CddsErrorType(tmp)
 	}
+	wait := WaitSet(tmp)
+	p.WaitSets = append(p.WaitSets, wait)
+	return &wait, nil
 }
 
 func (p *Participant) Delete() {
