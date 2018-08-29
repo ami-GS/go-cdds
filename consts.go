@@ -22,3 +22,22 @@ const (
 	CommunicationNil   CommunicationStatus = 0
 	PublicationMatched CommunicationStatus = C.DDS_PUBLICATION_MATCHED_STATUS
 )
+
+type ReadConditionState uint32
+
+const (
+	ReadSampleState    ReadConditionState = C.DDS_READ_SAMPLE_STATE
+	NotReadSampleState ReadConditionState = C.DDS_NOT_READ_SAMPLE_STATE
+	AnySampleState     ReadConditionState = C.DDS_ANY_SAMPLE_STATE
+
+	NewViewState    ReadConditionState = C.DDS_NEW_VIEW_STATE
+	NotNewViewState ReadConditionState = C.DDS_NOT_NEW_VIEW_STATE
+	AnyViewState    ReadConditionState = C.DDS_ANY_VIEW_STATE
+
+	AliveInstanceState             ReadConditionState = C.DDS_ALIVE_INSTANCE_STATE
+	NotAliveDisposedInstanceState  ReadConditionState = C.DDS_NOT_ALIVE_DISPOSED_INSTANCE_STATE
+	NotAliveNoWritersInstanceState ReadConditionState = C.DDS_NOT_ALIVE_NO_WRITERS_INSTANCE_STATE
+	AnyInstanceState               ReadConditionState = C.DDS_ANY_INSTANCE_STATE
+
+	AnyState ReadConditionState = C.DDS_ANY_STATE
+)
