@@ -13,12 +13,13 @@ import (
 // TODO: participant to be interface? ParticipantI
 type Participant struct {
 	Entity
-	topicNameToEntity map[string]*Topic
-	topicInfos        map[*Topic]*TopicAccessor
+	topicNameToEntity *map[string]*Topic
+	topicInfos        *map[*Topic]*TopicAccessor
 
 	// TODO: currently participant:pub/sub = 1:1, but should be 1:n/m
-	Publisher  Publisher
-	Subscriber Subscriber
+	Publishers  []Publisher
+	Subscribers []Subscriber
+	WaitSets    []WaitSet
 }
 
 func CreateParticipant(domainID DomainID, qos *QoS, listener *Listener) (*Participant, error) {
@@ -27,16 +28,17 @@ func CreateParticipant(domainID DomainID, qos *QoS, listener *Listener) (*Partic
 		return nil, CddsErrorType(tmp)
 	}
 
-	ErrorCheck(tmp, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
+	topicNameToEntity := make(map[string]*Topic)
+	topicInfos := make(map[*Topic]*TopicAccessor)
 	return &Participant{
 		Entity:            Entity(tmp),
-		topicNameToEntity: make(map[string]*Topic),
-		topicInfos:        make(map[*Topic]*TopicAccessor),
+		topicNameToEntity: &topicNameToEntity,
+		topicInfos:        &topicInfos,
 	}, nil
 }
 
 func (p *Participant) CreateTopic(desc unsafe.Pointer, name string, qos *QoS, listener *Listener) (*Topic, error) {
-	if _, ok := p.topicNameToEntity[name]; ok {
+	if _, ok := (*p.topicNameToEntity)[name]; ok {
 		// error or ignore if qos and listener is same?
 	}
 
@@ -51,13 +53,13 @@ func (p *Participant) CreateTopic(desc unsafe.Pointer, name string, qos *QoS, li
 		name:   name,
 	}
 
-	p.topicNameToEntity[name] = topic
-	p.topicInfos[topic] = &TopicAccessor{}
+	(*p.topicNameToEntity)[name] = topic
+	(*p.topicInfos)[topic] = &TopicAccessor{}
 	return topic, nil
 }
 
 func (p *Participant) GetOrCreateTopic(desc unsafe.Pointer, name string, qos *QoS, listener *Listener) (*Topic, error) {
-	if topic, ok := p.topicNameToEntity[name]; ok {
+	if topic, ok := (*p.topicNameToEntity)[name]; ok {
 		// TODO: check qos and listener whether these are same
 		return topic, nil
 	}
@@ -68,7 +70,7 @@ func (p *Participant) CreateReader(topic interface{}, elmSize uint32, qos *QoS, 
 	var topicEntity *Topic
 	switch t := topic.(type) {
 	case string:
-		topicEntity = p.topicNameToEntity[t]
+		topicEntity = (*p.topicNameToEntity)[t]
 	case *Topic:
 		topicEntity = t
 	default:
@@ -79,7 +81,7 @@ func (p *Participant) CreateReader(topic interface{}, elmSize uint32, qos *QoS, 
 		return nil, CddsErrorType(tmp)
 	}
 
-	if ac, ok := p.topicInfos[topicEntity]; ok {
+	if ac, ok := (*p.topicInfos)[topicEntity]; ok {
 		ac.Reader = Reader{
 			Entity:    Entity(tmp),
 			allocator: NewSampleAllocator(topicEntity.desc, elmSize),
@@ -94,7 +96,7 @@ func (p *Participant) GetOrCreateReader(topic interface{}, elmSize uint32, qos *
 	var ok bool
 	switch t := topic.(type) {
 	case string:
-		topicEntity, ok = p.topicNameToEntity[t]
+		topicEntity, ok = (*p.topicNameToEntity)[t]
 		if !ok {
 			panic("topic was not created")
 		}
@@ -104,7 +106,7 @@ func (p *Participant) GetOrCreateReader(topic interface{}, elmSize uint32, qos *
 		panic("1st argument of CreateWriter need to be string or *cdds.Topic")
 	}
 
-	acc, ok := p.topicInfos[topicEntity]
+	acc, ok := (*p.topicInfos)[topicEntity]
 	if !ok {
 		panic("topic was not created")
 	}
@@ -119,7 +121,7 @@ func (p *Participant) CreateWriter(topic interface{}, qos *QoS, listener *Listen
 	var topicEntity *Topic
 	switch t := topic.(type) {
 	case string:
-		topicEntity = p.topicNameToEntity[t]
+		topicEntity = (*p.topicNameToEntity)[t]
 	case *Topic:
 		topicEntity = t
 	default:
@@ -130,7 +132,7 @@ func (p *Participant) CreateWriter(topic interface{}, qos *QoS, listener *Listen
 		return nil, CddsErrorType(tmp)
 	}
 
-	if ac, ok := p.topicInfos[topicEntity]; ok {
+	if ac, ok := (*p.topicInfos)[topicEntity]; ok {
 		ac.Writer = Writer{Entity(tmp)}
 		return &ac.Writer, nil
 	}
@@ -142,7 +144,7 @@ func (p *Participant) GetOrCreateWriter(topic interface{}, qos *QoS, listener *L
 	var ok bool
 	switch t := topic.(type) {
 	case string:
-		topicEntity, ok = p.topicNameToEntity[t]
+		topicEntity, ok = (*p.topicNameToEntity)[t]
 		if !ok {
 			panic("topic was not created")
 		}
@@ -152,7 +154,7 @@ func (p *Participant) GetOrCreateWriter(topic interface{}, qos *QoS, listener *L
 		panic("1st argument of CreateWriter need to be string or *cdds.Topic")
 	}
 
-	acc, ok := p.topicInfos[topicEntity]
+	acc, ok := (*p.topicInfos)[topicEntity]
 	if !ok {
 		panic("topic was not created")
 	}
@@ -164,19 +166,19 @@ func (p *Participant) GetOrCreateWriter(topic interface{}, qos *QoS, listener *L
 }
 
 func (p *Participant) GeTopicWriter(topicString string) (*Writer, bool) {
-	entity, ok := p.topicNameToEntity[topicString]
+	entity, ok := (*p.topicNameToEntity)[topicString]
 	if !ok {
 		return nil, false
 	}
-	return &p.topicInfos[entity].Writer, true
+	return &(*p.topicInfos)[entity].Writer, true
 }
 
 func (p *Participant) GeTopicAccessor(topicString string) (*TopicAccessor, bool) {
-	entity, ok := p.topicNameToEntity[topicString]
+	entity, ok := (*p.topicNameToEntity)[topicString]
 	if !ok {
 		return nil, false
 	}
-	return p.topicInfos[entity], true
+	return (*p.topicInfos)[entity], true
 }
 
 func (p *Participant) CreatePublisher(qos *QoS, listener *Listener) error {
@@ -198,7 +200,7 @@ func (p *Participant) CreateSubscriber(qos *QoS, listener *Listener) error {
 }
 
 func (p *Participant) Delete() {
-	for _, accessor := range p.topicInfos {
+	for _, accessor := range *p.topicInfos {
 		if accessor.Reader.IsInitialized() {
 			accessor.Reader.Delete()
 		}
