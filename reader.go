@@ -13,7 +13,8 @@ import (
 
 type Reader struct {
 	Entity
-	allocator *SampleAllocator
+	allocator      *SampleAllocator
+	readConditions []ReadCondition
 }
 
 func (r Reader) Read(samples *unsafe.Pointer, info *SampleInfo, bufsz int, maxsz uint32) Return {
@@ -71,8 +72,10 @@ func (r Reader) AllocRead(bufsz int, maxsz uint32) (*Array, error) {
 	return samples, nil
 }
 
-func (r Reader) CreateReadCondition(mask uint32) ReadCondition {
-	return ReadCondition(C.dds_create_readcondition(r.GetEntity(), C.uint32_t(mask)))
+func (r *Reader) CreateReadCondition(mask uint32) *ReadCondition {
+	rd := ReadCondition(C.dds_create_readcondition(r.GetEntity(), C.uint32_t(mask)))
+	r.readConditions = append(r.readConditions, rd)
+	return &rd
 }
 
 func (r Reader) Delete() {
