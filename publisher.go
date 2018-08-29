@@ -7,4 +7,4 @@ package cdds
 */
 import "C"
 
-type Publisher Entity
+type Publisher Participant

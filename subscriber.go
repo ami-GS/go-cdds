@@ -7,4 +7,4 @@ package cdds
 */
 import "C"
 
-type Subscriber Entity
+type Subscriber Participant

@@ -181,22 +181,38 @@ func (p *Participant) GeTopicAccessor(topicString string) (*TopicAccessor, bool)
 	return (*p.topicInfos)[entity], true
 }
 
-func (p *Participant) CreatePublisher(qos *QoS, listener *Listener) error {
-	pub := C.dds_create_publisher(p.GetEntity(), (*C.dds_qos_t)(qos), (*C.dds_listener_t)(listener))
-	if pub < 0 {
-		return CddsErrorType(pub)
+func (p *Participant) CreatePublisher(qos *QoS, listener *Listener) (*Publisher, error) {
+	tmp := C.dds_create_publisher(p.GetEntity(), (*C.dds_qos_t)(qos), (*C.dds_listener_t)(listener))
+	if tmp < 0 {
+		return nil, CddsErrorType(tmp)
 	}
-	p.Publisher = Publisher(pub)
-	return nil
+
+	pub := Publisher(Participant{
+		Entity:            Entity(tmp),
+		topicNameToEntity: p.topicNameToEntity,
+		topicInfos:        p.topicInfos,
+	})
+
+	p.Publishers = append(p.Publishers, pub)
+	return &pub, nil
 }
 
-func (p *Participant) CreateSubscriber(qos *QoS, listener *Listener) error {
-	sub := C.dds_create_subscriber(p.GetEntity(), (*C.dds_qos_t)(qos), (*C.dds_listener_t)(listener))
-	if sub < 0 {
-		return CddsErrorType(sub)
+func (p *Participant) CreateSubscriber(qos *QoS, listener *Listener) (*Subscriber, error) {
+	tmp := C.dds_create_subscriber(p.GetEntity(), (*C.dds_qos_t)(qos), (*C.dds_listener_t)(listener))
+	if tmp < 0 {
+		return nil, CddsErrorType(tmp)
 	}
-	p.Subscriber = Subscriber(sub)
-	return nil
+
+	sub := Subscriber(Participant{
+		Entity:            Entity(tmp),
+		topicNameToEntity: p.topicNameToEntity,
+		topicInfos:        p.topicInfos,
+	})
+	p.Subscribers = append(p.Subscribers, sub)
+	return &sub, nil
+}
+
+	}
 }
 
 func (p *Participant) Delete() {
