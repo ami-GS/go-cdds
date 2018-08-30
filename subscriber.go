@@ -8,3 +8,7 @@ package cdds
 import "C"
 
 type Subscriber Participant
+
+func (p *Subscriber) CreateReader(topic interface{}, elmSize uint32, qos *QoS, listener *Listener) (*Reader, error) {
+	return (*Participant)(p).CreateReader(topic, elmSize, qos, listener)
+}
