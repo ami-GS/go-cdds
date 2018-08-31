@@ -1,0 +1,69 @@
+package cdds
+
+/*
+#cgo CFLAGS: -I/usr/local/include/ddsc
+#cgo LDFLAGS: -lddsc
+#include "ddsc/dds.h"
+*/
+import "C"
+import "unsafe"
+
+type ArrayI interface {
+	At(idx int) unsafe.Pointer
+	ForEach(fn func(unsafe.Pointer))
+}
+
+type RawArray struct {
+	head      unsafe.Pointer
+	elmSize   uint32
+	arraySize uint32
+}
+
+func (a RawArray) At(idx int) unsafe.Pointer {
+	if uint32(idx) >= a.arraySize {
+		panic("segmentation fault")
+	}
+
+	return unsafe.Pointer(uintptr(a.head) + uintptr(uint32(idx)*a.arraySize))
+}
+
+func (a RawArray) ForEach(fn func(unsafe.Pointer)) {
+	for i := 0; uint32(i) < a.arraySize; i++ {
+		fn(a.At(i))
+	}
+}
+
+type SampleInfo C.dds_sample_info_t
+
+func (info *SampleInfo) IsValid() bool {
+	return bool((*C.dds_sample_info_t)(info).valid_data)
+}
+
+type Array struct {
+	*RawArray
+	infos unsafe.Pointer
+}
+
+// Should be called from allocator
+func NewArray(arrayHead unsafe.Pointer, infoHead unsafe.Pointer, bufSize uint32, elmSize uint32) *Array {
+	return &Array{
+		RawArray: &RawArray{
+			head:      arrayHead,
+			elmSize:   elmSize,
+			arraySize: bufSize,
+		},
+		infos: infoHead,
+	}
+}
+
+func (a Array) InfoAt(idx int) *SampleInfo {
+	if uint32(idx) >= a.arraySize {
+		panic("segmentation fault")
+	}
+
+	return (*SampleInfo)(unsafe.Pointer(uintptr(a.infos) + uintptr(uint32(idx)*a.arraySize)))
+}
+
+func (a Array) IsValidAt(idx int) bool {
+	return a.InfoAt(idx).IsValid()
+}
