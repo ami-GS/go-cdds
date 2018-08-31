@@ -11,32 +11,89 @@ import (
 	"unsafe"
 )
 
-type SampleAllocator struct {
+type AllocatorI interface {
+	Free(sample unsafe.Pointer)
+	AllFree()
+	alloc(num uint32) unsafe.Pointer
+	AllocArray(num uint32) *RawArray
+}
+
+type RawAllocator struct {
 	elmSize      uint32
-	desc         unsafe.Pointer
 	mut          *sync.Mutex
 	allockedList map[unsafe.Pointer]unsafe.Pointer
 }
 
-func NewSampleAllocator(desc unsafe.Pointer, elmSize uint32) *SampleAllocator {
-	return &SampleAllocator{
+func NewRawAllocator(elmSize uint32) *RawAllocator {
+	return &RawAllocator{
 		elmSize:      elmSize,
-		desc:         desc,
 		mut:          new(sync.Mutex),
 		allockedList: make(map[unsafe.Pointer]unsafe.Pointer),
 	}
 }
 
-func (a *SampleAllocator) alloc(num uint32) unsafe.Pointer /*error*/ {
+func (a *RawAllocator) Free(sample unsafe.Pointer) {
+	a.mut.Lock()
+	defer a.mut.Unlock()
+
+	_, ok := a.allockedList[sample]
+	if !ok {
+		panic("unallocated location free")
+	}
+	delete(a.allockedList, sample)
+	C.dds_free(sample)
+}
+
+func (a *RawAllocator) AllFree() {
+	a.mut.Lock()
+	defer a.mut.Unlock()
+
+	for array, _ := range a.allockedList {
+		C.dds_free(array)
+	}
+}
+
+func (a RawAllocator) alloc(num uint32) unsafe.Pointer /*error*/ {
 	allocked := unsafe.Pointer(C.dds_alloc(C.ulong(a.elmSize * num)))
 	return allocked
 }
+
+func (a *RawAllocator) AllocArray(num uint32) *RawArray {
+	a.mut.Lock()
+	defer a.mut.Unlock()
+
+	head := a.alloc(num)
+	a.allockedList[head] = nil
+	return &RawArray{
+		head:      head,
+		elmSize:   a.elmSize,
+		arraySize: num,
+	}
+}
+
+type SampleAllocator struct {
+	*RawAllocator
+	desc unsafe.Pointer
+}
+
+func NewSampleAllocator(desc unsafe.Pointer, elmSize uint32) *SampleAllocator {
+	return &SampleAllocator{
+		RawAllocator: &RawAllocator{
+			elmSize:      elmSize,
+			mut:          new(sync.Mutex),
+			allockedList: make(map[unsafe.Pointer]unsafe.Pointer),
+		},
+		desc: desc,
+	}
+}
+
 func (a *SampleAllocator) allocInfo(num uint32) unsafe.Pointer /*error*/ {
 	var val C.dds_sample_info_t
 	allocked := unsafe.Pointer(C.dds_alloc(C.ulong(unsafe.Sizeof(val) * uintptr(num))))
 	return allocked
 }
 
+//override
 func (a *SampleAllocator) AllocArray(num uint32) *Array {
 	a.mut.Lock()
 	defer a.mut.Unlock()
@@ -46,6 +103,7 @@ func (a *SampleAllocator) AllocArray(num uint32) *Array {
 	return NewArray(sample, infos, num, a.elmSize)
 }
 
+//override
 func (a *SampleAllocator) Free(sample unsafe.Pointer) /*error*/ {
 	a.mut.Lock()
 	defer a.mut.Unlock()
@@ -59,6 +117,7 @@ func (a *SampleAllocator) Free(sample unsafe.Pointer) /*error*/ {
 	C.dds_free(infos)
 }
 
+//override
 func (a *SampleAllocator) AllFree() {
 	a.mut.Lock()
 	defer a.mut.Unlock()

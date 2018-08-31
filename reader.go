@@ -31,7 +31,7 @@ func (r Reader) ReadWithCallback(bufsz int, maxsz uint32, finCh *chan error, cal
 		*finCh <- err
 	}
 	callback(samples)
-	r.allocator.Free(unsafe.Pointer(samples.arr))
+	r.allocator.Free(unsafe.Pointer(samples.head))
 	*finCh <- nil
 
 }
