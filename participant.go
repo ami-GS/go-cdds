@@ -217,7 +217,11 @@ func (p *Participant) CreateWaitSet() (*WaitSet, error) {
 	if tmp < 0 {
 		return nil, CddsErrorType(tmp)
 	}
-	wait := WaitSet(tmp)
+	var sample C.dds_attach_t
+	wait := WaitSet{
+		Entity:    Entity(tmp),
+		allocator: NewRawAllocator(uint32(unsafe.Sizeof(sample))),
+	}
 	p.WaitSets = append(p.WaitSets, wait)
 	return &wait, nil
 }

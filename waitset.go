@@ -8,15 +8,24 @@ package cdds
 import "C"
 import "time"
 
-type WaitSet Entity
-
-func (w WaitSet) Wait(wsresults *Attach, size int, d time.Duration) {
-	ret := C.dds_waitset_wait(C.dds_entity_t(w), (*C.dds_attach_t)(wsresults), C.size_t(size), C.dds_duration_t(int64(d)))
-	ErrorCheck(ret, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
+type WaitSet struct {
+	Entity
+	allocator *RawAllocator
 }
 
-func (w WaitSet) Attach(entity EntityI, arg Entity) error {
-	ret := C.dds_waitset_attach(C.dds_entity_t(w), entity.GetEntity(), C.dds_attach_t(arg))
+func (w WaitSet) Wait(size int, d time.Duration) (*Attach, error) {
+	wsresults := w.allocator.AllocArray(uint32(size))
+
+	ret := C.dds_waitset_wait(w.GetEntity(), (*C.dds_attach_t)(wsresults.At(0)), C.size_t(size), C.dds_duration_t(int64(d)))
+	if ret < 0 {
+		return nil, CddsErrorType(ret)
+	}
+	// TODO: return appropriate results
+	return nil, nil
+}
+
+func (w WaitSet) Attach(entity EntityI, arg EntityI) error {
+	ret := C.dds_waitset_attach(w.GetEntity(), entity.GetEntity(), C.dds_attach_t(arg.GetEntity()))
 	if ret < 0 {
 		return CddsErrorType(ret)
 	}
@@ -24,5 +33,16 @@ func (w WaitSet) Attach(entity EntityI, arg Entity) error {
 }
 
 func (w WaitSet) Detach(entity EntityI) {
-	C.dds_waitset_detach(C.dds_entity_t(w), entity.GetEntity())
+	C.dds_waitset_detach(w.GetEntity(), entity.GetEntity())
+}
+
+func (w WaitSet) Triggered() {
+
+}
+
+func (w *WaitSet) Delete() {
+	if w.allocator != nil {
+		w.allocator.AllFree()
+	}
+	w.Entity.Delete()
 }
