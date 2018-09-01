@@ -52,3 +52,11 @@ func (e Entity) SetEnabledStatus(comStatusMask CommunicationStatus) error {
 func (e Entity) IsInitialized() bool {
 	return e.GetEntity() > 0
 }
+
+func (e Entity) Triggered() error {
+	ret := C.dds_triggered(e.GetEntity())
+	if ret < 0 {
+		return CddsErrorType(ret)
+	}
+	return nil
+}

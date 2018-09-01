@@ -36,10 +36,6 @@ func (w WaitSet) Detach(entity EntityI) {
 	C.dds_waitset_detach(w.GetEntity(), entity.GetEntity())
 }
 
-func (w WaitSet) Triggered() {
-
-}
-
 func (w *WaitSet) delete() error {
 	if w.allocator != nil {
 		w.allocator.AllFree()
