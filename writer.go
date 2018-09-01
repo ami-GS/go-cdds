@@ -56,3 +56,10 @@ func (w *Writer) SearchTopic(d time.Duration) error {
 	}
 	return nil
 }
+
+func (w *Writer) delete() error {
+	if w.qos != nil {
+		w.qos.delete()
+	}
+	return nil
+}

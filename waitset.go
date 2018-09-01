@@ -40,9 +40,9 @@ func (w WaitSet) Triggered() {
 
 }
 
-func (w *WaitSet) Delete() {
+func (w *WaitSet) delete() error {
 	if w.allocator != nil {
 		w.allocator.AllFree()
 	}
-	w.Entity.Delete()
+	return w.Entity.delete()
 }

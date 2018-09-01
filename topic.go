@@ -12,3 +12,9 @@ type TopicAccessor struct {
 	Reader Reader
 	Writer Writer
 }
+
+func (t *Topic) delete() {
+	if t.qos != nil {
+		t.qos.delete()
+	}
+}

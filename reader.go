@@ -78,10 +78,14 @@ func (r *Reader) CreateReadCondition(mask ReadConditionState) *ReadCondition {
 	return &rd
 }
 
-func (r Reader) Delete() {
+func (r Reader) delete() {
 	if r.allocator != nil {
 		r.allocator.AllFree()
 	}
+	if r.qos != nil {
+		r.qos.delete()
+	}
+
 	// reader entity will be deleted by participant, no need to call from here
 	//r.Entity.Delete()
 }
