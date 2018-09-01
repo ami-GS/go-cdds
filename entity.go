@@ -12,15 +12,22 @@ type EntityI interface {
 	IsInitialized() bool
 }
 
-type Entity C.dds_entity_t
+//type Entity C.dds_entity_t
+type Entity struct {
+	ent C.dds_entity_t
+	qos *QoS //participantI and Topic and ? have qos
+}
 
 func (e Entity) GetEntity() C.dds_entity_t {
-	return C.dds_entity_t(e)
+	return C.dds_entity_t(e.ent)
 }
-func (e Entity) Delete() error {
+func (e Entity) delete() error {
 	ret := C.dds_delete(e.GetEntity())
 	if ret < 0 {
 		return CddsErrorType(ret)
+	}
+	if e.qos != nil {
+		e.qos.delete()
 	}
 	return nil
 }

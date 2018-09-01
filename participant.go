@@ -31,7 +31,7 @@ func CreateParticipant(domainID DomainID, qos *QoS, listener *Listener) (*Partic
 	topicNameToEntity := make(map[string]*Topic)
 	topicInfos := make(map[*Topic]*TopicAccessor)
 	return &Participant{
-		Entity:            Entity(tmp),
+		Entity:            Entity{ent: tmp, qos: qos},
 		topicNameToEntity: &topicNameToEntity,
 		topicInfos:        &topicInfos,
 	}, nil
@@ -48,7 +48,7 @@ func (p *Participant) CreateTopic(desc unsafe.Pointer, name string, qos *QoS, li
 	}
 
 	topic := &Topic{
-		Entity: Entity(tmp),
+		Entity: Entity{ent: tmp, qos: qos},
 		desc:   desc,
 		name:   name,
 	}
@@ -83,7 +83,7 @@ func (p *Participant) CreateReader(topic interface{}, elmSize uint32, qos *QoS, 
 
 	if ac, ok := (*p.topicInfos)[topicEntity]; ok {
 		ac.Reader = Reader{
-			Entity:    Entity(tmp),
+			Entity:    Entity{ent: tmp, qos: qos},
 			allocator: NewSampleAllocator(topicEntity.desc, elmSize),
 		}
 		return &ac.Reader, nil
@@ -133,7 +133,7 @@ func (p *Participant) CreateWriter(topic interface{}, qos *QoS, listener *Listen
 	}
 
 	if ac, ok := (*p.topicInfos)[topicEntity]; ok {
-		ac.Writer = Writer{Entity(tmp)}
+		ac.Writer = Writer{Entity{ent: tmp, qos: qos}}
 		return &ac.Writer, nil
 	}
 	panic("topic was not created")
@@ -188,7 +188,7 @@ func (p *Participant) CreatePublisher(qos *QoS, listener *Listener) (*Publisher,
 	}
 
 	pub := Publisher(Participant{
-		Entity:            Entity(tmp),
+		Entity:            Entity{ent: tmp, qos: qos},
 		topicNameToEntity: p.topicNameToEntity,
 		topicInfos:        p.topicInfos,
 	})
@@ -204,7 +204,7 @@ func (p *Participant) CreateSubscriber(qos *QoS, listener *Listener) (*Subscribe
 	}
 
 	sub := Subscriber(Participant{
-		Entity:            Entity(tmp),
+		Entity:            Entity{ent: tmp, qos: qos},
 		topicNameToEntity: p.topicNameToEntity,
 		topicInfos:        p.topicInfos,
 	})
@@ -219,18 +219,35 @@ func (p *Participant) CreateWaitSet() (*WaitSet, error) {
 	}
 	var sample C.dds_attach_t
 	wait := WaitSet{
-		Entity:    Entity(tmp),
+		Entity:    Entity{ent: tmp, qos: nil},
 		allocator: NewRawAllocator(uint32(unsafe.Sizeof(sample))),
 	}
 	p.WaitSets = append(p.WaitSets, wait)
 	return &wait, nil
 }
 
-func (p *Participant) Delete() {
-	for _, accessor := range *p.topicInfos {
+func (p *Participant) Delete() error {
+	for topic, accessor := range *p.topicInfos {
 		if accessor.Reader.IsInitialized() {
-			accessor.Reader.Delete()
+			accessor.Reader.delete()
+		}
+		if accessor.Writer.IsInitialized() {
+			// only for qos.delete()
+			err := accessor.Writer.delete()
+			if err != nil {
+				return err
+			}
+		}
+		// only for qos.delete()
+		topic.delete()
+	}
+	for _, waitSet := range p.WaitSets {
+		err := waitSet.delete()
+		if err != nil {
+			return err
 		}
 	}
-	p.Entity.Delete()
+
+	// Delete of participant propagete writer/reader/pub/sub entity implicitly
+	return p.Entity.delete()
 }

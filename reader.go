@@ -73,7 +73,7 @@ func (r Reader) AllocRead(bufsz int, maxsz uint32) (*Array, error) {
 }
 
 func (r *Reader) CreateReadCondition(mask ReadConditionState) *ReadCondition {
-	rd := ReadCondition(C.dds_create_readcondition(r.GetEntity(), C.uint32_t(mask)))
+	rd := ReadCondition(Entity{ent: C.dds_create_readcondition(r.GetEntity(), C.uint32_t(mask)), qos: nil})
 	r.readConditions = append(r.readConditions, rd)
 	return &rd
 }
