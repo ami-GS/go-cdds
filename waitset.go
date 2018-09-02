@@ -32,8 +32,12 @@ func (w WaitSet) Attach(entity EntityI, arg EntityI) error {
 	return nil
 }
 
-func (w WaitSet) Detach(entity EntityI) {
-	C.dds_waitset_detach(w.GetEntity(), entity.GetEntity())
+func (w WaitSet) Detach(entity EntityI) error {
+	ret := C.dds_waitset_detach(w.GetEntity(), entity.GetEntity())
+	if ret < 0 {
+		return CddsErrorType(ret)
+	}
+	return nil
 }
 
 func (w *WaitSet) delete() error {
