@@ -7,12 +7,10 @@ package cdds
 */
 import "C"
 import (
-	"time"
 	"unsafe"
 )
 
 //type Topic Entity
-type ReadCondition Entity
 
 //TODO: can be error?
 type Return C.dds_return_t

@@ -11,6 +11,10 @@ import (
 	"unsafe"
 )
 
+type ReadCondition struct {
+	Entity
+}
+
 type Reader struct {
 	Entity
 	allocator      *SampleAllocator
@@ -52,7 +56,6 @@ func (r Reader) BlockAllocRead(bufsz int, maxsz uint32) (*Array, error) {
 
 		if info.valid_data {
 			i++
-			break
 		}
 		time.Sleep(time.Millisecond * 20)
 	}
@@ -73,19 +76,28 @@ func (r Reader) AllocRead(bufsz int, maxsz uint32) (*Array, error) {
 }
 
 func (r *Reader) CreateReadCondition(mask ReadConditionState) *ReadCondition {
-	rd := ReadCondition(Entity{ent: C.dds_create_readcondition(r.GetEntity(), C.uint32_t(mask)), qos: nil})
+	rd := ReadCondition{
+		Entity: Entity{ent: C.dds_create_readcondition(r.GetEntity(), C.uint32_t(mask)), qos: nil},
+	}
 	r.readConditions = append(r.readConditions, rd)
 	return &rd
 }
 
-func (r Reader) delete() {
+func (r Reader) delete() error {
 	if r.allocator != nil {
 		r.allocator.AllFree()
 	}
 	if r.qos != nil {
 		r.qos.delete()
 	}
-
+	for _, rdcond := range r.readConditions {
+		// TODO: be careful, this might be deleted via participant.Delete(), need to check in the future
+		err := rdcond.delete()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 	// reader entity will be deleted by participant, no need to call from here
 	//r.Entity.Delete()
 }
