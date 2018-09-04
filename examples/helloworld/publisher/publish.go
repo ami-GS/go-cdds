@@ -34,23 +34,31 @@ func main() {
 	}
 	fmt.Println("=== [Publisher] Waiting for a reader to be discovered ...")
 
-	//writer.SearchTopic(time.Millisecond * 20)
+	// err = writer.SearchTopic(time.Millisecond * 20)
+	// if err != nil {
+	// 	panic(err)
+	// }
 
-	writer.SetEnabledStatus(cdds.PublicationMatched)
-	for {
-		status, err := writer.GetStatusChanges()
+	err = writer.SetEnabledStatus(cdds.PublicationMatched)
+	if err != nil {
+		panic(err)
+	}
+	var status cdds.CommunicationStatus
+	for status != cdds.PublicationMatched {
+		status, err = writer.GetStatusChanges()
 		if err != nil {
 			panic(err)
 		}
-		if status == cdds.PublicationMatched {
-			break
-		}
 		cdds.SleepFor(time.Millisecond * 20)
 	}
-	msg.userID = 1
-	msg.message = C.CString("Hello World!")
+
+	msg.userID = 12343
+
+	jsonStr := "{\"Name\":\"cyclone\", \"Age\":22}"
+
+	msg.message = C.CString(jsonStr)
+
 	fmt.Println("=== [Publisher] Writing : ")
 	fmt.Printf("Message (%d, %s)\n", msg.userID, C.GoString(msg.message))
 	writer.Write(unsafe.Pointer(&msg))
-
 }
