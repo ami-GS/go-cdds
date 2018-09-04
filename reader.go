@@ -75,6 +75,26 @@ func (r Reader) AllocRead(bufsz int, maxsz uint32) (*Array, error) {
 	return samples, nil
 }
 
+func (r Reader) Alloc(bufsz int) *Array {
+	// this is not GCed by Golang, maybe
+	return r.allocator.AllocArray(uint32(bufsz))
+}
+
+func (r Reader) ReadWithBuff(samples *Array) error {
+	// this is not GCed by Golang, maybe
+	if samples == nil {
+		panic("buffer was not allocated")
+	}
+
+	loc := samples.At(0)
+
+	ret := C.dds_read(r.GetEntity(), &loc, (*C.dds_sample_info_t)(samples.InfoAt(0)), C.size_t(samples.elmSize), C.uint32_t(samples.elmSize))
+	if ret < 0 {
+		return CddsErrorType(ret)
+	}
+	return nil
+}
+
 func (r *Reader) CreateReadCondition(mask ReadConditionState) *ReadCondition {
 	rd := ReadCondition{
 		Entity: Entity{ent: C.dds_create_readcondition(r.GetEntity(), C.uint32_t(mask)), qos: nil},

@@ -38,33 +38,46 @@ func main() {
 	qos.Delete()
 	fmt.Println("=== [Subscriber] Waiting for sample ...")
 
+	// 1. callback
 	// finCh := make(chan error)
 	// go reader.ReadWithCallback(MAX_SAMPLES, MAX_SAMPLES, &finCh, func(samples *cdds.Array) {
 	// 	msg = (*C.HelloWorldData_Msg)(samples.At(0))
 	// 	fmt.Printf("Message (%d, %s)\n", msg.userID, C.GoString(msg.message))
 	// })
-	// err <-finCh
+	// err = <-finCh
 	// if err != nil {
-	// panic(err)
+	// 	panic(err)
 	// }
 
-	sample, err := reader.BlockAllocRead(MAX_SAMPLES, MAX_SAMPLES)
-	if err != nil {
-		panic(err)
+	// 2. blocking read
+	// sample, err := reader.BlockAllocRead(MAX_SAMPLES, MAX_SAMPLES)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// msg = (*C.HelloWorldData_Msg)(sample.At(0))
+	// fmt.Print("=== [Subscriber] Received : ")
+	// fmt.Printf("Message (%d, %s)\n", msg.userID, C.GoString(msg.message))
+
+	// 3. basic loop
+	//samples := reader.Alloc(MAX_SAMPLES)
+	var samples *cdds.Array
+	for {
+		// WARN: Just using AllocRead() use much heap space
+		if samples == nil {
+			samples, err = reader.AllocRead(MAX_SAMPLES, MAX_SAMPLES)
+		} else {
+			err = reader.ReadWithBuff(samples)
+		}
+
+		if err != nil {
+			panic(err)
+		}
+		if samples.IsValidAt(0) {
+			msg = (*C.HelloWorldData_Msg)(samples.At(0))
+			fmt.Print("=== [Subscriber] Received : ")
+			fmt.Printf("Message (%d, %s)\n", msg.userID, C.GoString(msg.message))
+			break
+		}
+		cdds.SleepFor(time.Millisecond * 20)
 	}
-	msg = (*C.HelloWorldData_Msg)(sample.At(0))
-	fmt.Print("=== [Subscriber] Received : ")
-	fmt.Printf("Message (%d, %s)\n", msg.userID, C.GoString(msg.message))
-
-	// for {
-	// 	samples := reader.AllocRead(MAX_SAMPLES, MAX_SAMPLES)
-	// 	if samples.IsValidAt(0) {
-	// 		/* Print Message. */
-	// 		msg = (*C.HelloWorldData_Msg)(samples.At(0))
-	// 		fmt.Print("=== [Subscriber] Received : ")
-	// 		fmt.Printf("Message (%d, %s)\n", msg.userID, C.GoString(msg.message))
-	// 		break
-	// 	}
-	// 	cdds.SleepFor(time.Millisecond * 20)
-	// }
 }
