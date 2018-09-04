@@ -43,14 +43,15 @@ func (w Writer) WriteDispose(data unsafe.Pointer) error {
 func (w *Writer) SearchTopic(d time.Duration) error {
 	// need mutex lock?
 	// WARN: this cause error
-	w.SetEnabledStatus(PublicationMatched)
-	for {
-		status, err := w.GetStatusChanges()
+	err := w.SetEnabledStatus(PublicationMatched)
+	if err != nil {
+		return err
+	}
+	var status CommunicationStatus
+	for status != PublicationMatched {
+		status, err = w.GetStatusChanges()
 		if err != nil {
 			return err
-		}
-		if status == PublicationMatched {
-			break
 		}
 		time.Sleep(d)
 	}
