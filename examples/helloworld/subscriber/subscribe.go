@@ -40,7 +40,7 @@ func main() {
 
 	// 1. callback
 	// finCh := make(chan error)
-	// go reader.ReadWithCallback(MAX_SAMPLES, MAX_SAMPLES, &finCh, func(samples *cdds.Array) {
+	// go reader.ReadWithCallback(MAX_SAMPLES, MAX_SAMPLES, false, &finCh, func(samples *cdds.Array) {
 	// 	msg = (*C.HelloWorldData_Msg)(samples.At(0))
 	// 	fmt.Printf("Message (%d, %s)\n", msg.userID, C.GoString(msg.message))
 	// })
@@ -50,7 +50,7 @@ func main() {
 	// }
 
 	// 2. blocking read
-	// sample, err := reader.BlockAllocRead(MAX_SAMPLES, MAX_SAMPLES)
+	// sample, err := reader.BlockAllocRead(MAX_SAMPLES, MAX_SAMPLES, false)
 	// if err != nil {
 	// 	panic(err)
 	// }
@@ -64,9 +64,9 @@ func main() {
 	for {
 		// WARN: Just using AllocRead() use much heap space
 		if samples == nil {
-			samples, err = reader.AllocRead(MAX_SAMPLES, MAX_SAMPLES)
+			samples, err = reader.AllocRead(MAX_SAMPLES, MAX_SAMPLES, false)
 		} else {
-			err = reader.ReadWithBuff(samples)
+			err = reader.ReadWithBuff(samples, false)
 		}
 
 		if err != nil {
