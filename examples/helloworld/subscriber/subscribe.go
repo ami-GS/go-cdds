@@ -29,13 +29,13 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
 	qos := cdds.CreateQoS()
 	qos.SetReliability(cdds.Reliable, time.Second*10)
 	reader, err := participant.CreateReader("HelloWorldData_Msg", uint32(unsafe.Sizeof(*msg)), qos, nil)
 	if err != nil {
 		panic(err)
 	}
-	qos.Delete()
 	fmt.Println("=== [Subscriber] Waiting for sample ...")
 
 	// 1. callback
