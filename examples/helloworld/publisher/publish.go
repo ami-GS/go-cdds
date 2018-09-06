@@ -19,7 +19,7 @@ func main() {
 	var msg C.HelloWorldData_Msg
 
 	participant, err := cdds.CreateParticipant(cdds.DomainDefault, nil, nil)
-	defer participant.Delete()
+	defer participant.Delete(true)
 	if err != nil {
 		panic(err)
 	}

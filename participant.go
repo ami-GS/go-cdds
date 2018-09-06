@@ -226,7 +226,7 @@ func (p *Participant) CreateWaitSet() (*WaitSet, error) {
 	return &wait, nil
 }
 
-func (p *Participant) Delete() error {
+func (p *Participant) Delete(isTopLevel bool) error {
 	for topic, accessor := range *p.topicInfos {
 		if accessor.Reader.IsInitialized() {
 			accessor.Reader.delete()
@@ -247,7 +247,22 @@ func (p *Participant) Delete() error {
 			return err
 		}
 	}
+	for _, pub := range p.Publishers {
+		err := pub.Delete()
+		if err != nil {
+			return err
+		}
+	}
+	for _, sub := range p.Subscribers {
+		err := sub.Delete()
+		if err != nil {
+			return err
+		}
+	}
 
-	// Delete of participant propagete writer/reader/pub/sub entity implicitly
-	return p.Entity.delete()
+	if isTopLevel {
+		// Delete of participant propagete writer/reader/pub/sub entity implicitly
+		return p.Entity.delete()
+	}
+	return nil
 }
