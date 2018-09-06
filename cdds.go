@@ -10,11 +10,6 @@ import (
 	"unsafe"
 )
 
-//type Topic Entity
-
-//TODO: can be error?
-type Return C.dds_return_t
-
 type DomainID C.dds_domainid_t
 type Listener C.dds_listener_t
 

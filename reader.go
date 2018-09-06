@@ -23,14 +23,17 @@ type Reader struct {
 
 // take == false just return copy of data, take == true removes data after reading
 // https://github.com/eclipse/cyclonedds/issues/17
-func (r Reader) Read(samples *unsafe.Pointer, info *SampleInfo, bufsz int, maxsz uint32, take bool) Return {
+func (r Reader) Read(samples *unsafe.Pointer, info *SampleInfo, bufsz int, maxsz uint32, take bool) error {
 	var ret C.dds_entity_t
 	if take {
 		ret = C.dds_take(r.GetEntity(), samples, (*C.dds_sample_info_t)(info), C.size_t(bufsz), C.uint32_t(maxsz))
 	} else {
 		ret = C.dds_read(r.GetEntity(), samples, (*C.dds_sample_info_t)(info), C.size_t(bufsz), C.uint32_t(maxsz))
 	}
-	return Return(ret)
+	if ret < 0 {
+		return CddsErrorType(ret)
+	}
+	return nil
 }
 
 func (r Reader) ReadWithCallback(bufsz int, maxsz uint32, take bool, finCh *chan error, callback func(*Array)) {
