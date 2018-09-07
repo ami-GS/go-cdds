@@ -51,6 +51,7 @@ func (a *RawAllocator) AllFree() {
 	for array, _ := range a.allockedList {
 		C.dds_free(array)
 	}
+	a.allockedList = make(map[unsafe.Pointer]unsafe.Pointer)
 }
 
 func (a RawAllocator) alloc(num uint32) unsafe.Pointer /*error*/ {
@@ -126,4 +127,5 @@ func (a *SampleAllocator) AllFree() {
 		C.dds_sample_free(array, (*C.dds_topic_descriptor_t)(a.desc), C.DDS_FREE_ALL)
 		C.dds_free(infos)
 	}
+	a.allockedList = make(map[unsafe.Pointer]unsafe.Pointer)
 }
