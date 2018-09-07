@@ -13,7 +13,7 @@ type WaitSet struct {
 	allocator *RawAllocator
 }
 
-func (w WaitSet) Wait(size int, d time.Duration) (*RawArray, error) {
+func (w *WaitSet) Wait(size int, d time.Duration) (*RawArray, error) {
 	// TODO: to return RawArray in stead of array of Attach is not convenient?
 	wsresults := w.allocator.AllocArray(uint32(size))
 
@@ -25,7 +25,7 @@ func (w WaitSet) Wait(size int, d time.Duration) (*RawArray, error) {
 
 }
 
-func (w WaitSet) Attach(entity EntityI, arg EntityI) error {
+func (w *WaitSet) Attach(entity EntityI, arg EntityI) error {
 	ret := C.dds_waitset_attach(w.GetEntity(), entity.GetEntity(), C.dds_attach_t(arg.GetEntity()))
 	if ret < 0 {
 		return CddsErrorType(ret)
@@ -33,7 +33,7 @@ func (w WaitSet) Attach(entity EntityI, arg EntityI) error {
 	return nil
 }
 
-func (w WaitSet) Detach(entity EntityI) error {
+func (w *WaitSet) Detach(entity EntityI) error {
 	ret := C.dds_waitset_detach(w.GetEntity(), entity.GetEntity())
 	if ret < 0 {
 		return CddsErrorType(ret)

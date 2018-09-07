@@ -15,7 +15,8 @@ type Writer struct {
 	Entity
 }
 
-func (w Writer) Write(data unsafe.Pointer) error {
+// Write is using current time implicitly
+func (w *Writer) Write(data unsafe.Pointer) error {
 	ret := C.dds_write(w.GetEntity(), data)
 	ErrorCheck(ret, C.DDS_CHECK_REPORT|C.DDS_CHECK_EXIT, "tmp where")
 	if ret < 0 {
@@ -24,7 +25,8 @@ func (w Writer) Write(data unsafe.Pointer) error {
 	return nil
 }
 
-func (w Writer) WriteTimeStamp(data unsafe.Pointer, ts Time) error {
+// WriteTimeStamp use user defined time
+func (w *Writer) WriteTimeStamp(data unsafe.Pointer, ts Time) error {
 	ret := C.dds_write_ts(w.GetEntity(), data, C.dds_time_t(ts))
 	if ret < 0 {
 		return CddsErrorType(ret)
@@ -32,7 +34,7 @@ func (w Writer) WriteTimeStamp(data unsafe.Pointer, ts Time) error {
 	return nil
 }
 
-func (w Writer) WriteDispose(data unsafe.Pointer) error {
+func (w *Writer) WriteDispose(data unsafe.Pointer) error {
 	ret := C.dds_writedispose(w.GetEntity(), data)
 	if ret < 0 {
 		return CddsErrorType(ret)

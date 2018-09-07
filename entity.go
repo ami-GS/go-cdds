@@ -21,7 +21,7 @@ type Entity struct {
 func (e Entity) GetEntity() C.dds_entity_t {
 	return C.dds_entity_t(e.ent)
 }
-func (e Entity) delete() error {
+func (e *Entity) delete() error {
 	ret := C.dds_delete(e.GetEntity())
 	if ret < 0 {
 		return CddsErrorType(ret)
@@ -41,7 +41,7 @@ func (e Entity) GetStatusChanges() (CommunicationStatus, error) {
 	return status, nil
 }
 
-func (e Entity) SetEnabledStatus(comStatusMask CommunicationStatus) error {
+func (e *Entity) SetEnabledStatus(comStatusMask CommunicationStatus) error {
 	ret := C.dds_set_enabled_status(e.GetEntity(), C.uint32_t(comStatusMask))
 	if ret < 0 {
 		return CddsErrorType(ret)

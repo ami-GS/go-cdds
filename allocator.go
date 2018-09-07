@@ -54,7 +54,7 @@ func (a *RawAllocator) AllFree() {
 	a.allockedList = make(map[unsafe.Pointer]unsafe.Pointer)
 }
 
-func (a RawAllocator) alloc(num uint32) unsafe.Pointer /*error*/ {
+func (a *RawAllocator) alloc(num uint32) unsafe.Pointer /*error*/ {
 	allocked := unsafe.Pointer(C.dds_alloc(C.ulong(a.elmSize * num)))
 	return allocked
 }
