@@ -98,24 +98,24 @@ func (a *SampleAllocator) allocInfo(num uint32) unsafe.Pointer /*error*/ {
 func (a *SampleAllocator) AllocArray(num uint32) *Array {
 	a.mut.Lock()
 	defer a.mut.Unlock()
-	sample := a.alloc(num)
-	infos := a.allocInfo(num)
-	a.allockedList[sample] = infos
-	return NewArray(sample, infos, num, a.elmSize)
+	sampleHead := a.alloc(num)
+	infosHead := a.allocInfo(num)
+	a.allockedList[sampleHead] = infosHead
+	return NewArray(sampleHead, infosHead, num, a.elmSize)
 }
 
 //override
-func (a *SampleAllocator) Free(sample unsafe.Pointer) /*error*/ {
+func (a *SampleAllocator) Free(sampleHead unsafe.Pointer) /*error*/ {
 	a.mut.Lock()
 	defer a.mut.Unlock()
 
-	infos, ok := a.allockedList[sample]
+	infosHead, ok := a.allockedList[sampleHead]
 	if !ok {
 		panic("unallocated location free")
 	}
-	delete(a.allockedList, sample)
-	C.dds_sample_free(sample, (*C.dds_topic_descriptor_t)(a.desc), C.DDS_FREE_ALL)
-	C.dds_free(infos)
+	delete(a.allockedList, sampleHead)
+	C.dds_sample_free(sampleHead, (*C.dds_topic_descriptor_t)(a.desc), C.DDS_FREE_ALL)
+	C.dds_free(infosHead)
 }
 
 //override
@@ -123,9 +123,9 @@ func (a *SampleAllocator) AllFree() {
 	a.mut.Lock()
 	defer a.mut.Unlock()
 
-	for array, infos := range a.allockedList {
-		C.dds_sample_free(array, (*C.dds_topic_descriptor_t)(a.desc), C.DDS_FREE_ALL)
-		C.dds_free(infos)
+	for arrayHead, infosHead := range a.allockedList {
+		C.dds_sample_free(arrayHead, (*C.dds_topic_descriptor_t)(a.desc), C.DDS_FREE_ALL)
+		C.dds_free(infosHead)
 	}
 	a.allockedList = make(map[unsafe.Pointer]unsafe.Pointer)
 }
