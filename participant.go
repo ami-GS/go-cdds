@@ -227,19 +227,21 @@ func (p *Participant) CreateWaitSet() (*WaitSet, error) {
 }
 
 func (p *Participant) Delete(isTopLevel bool) error {
-	for topic, accessor := range *p.topicInfos {
-		if accessor.Reader.IsInitialized() {
-			accessor.Reader.delete()
-		}
-		if accessor.Writer.IsInitialized() {
-			// only for qos.delete()
-			err := accessor.Writer.delete()
-			if err != nil {
-				return err
+	if isTopLevel {
+		for topic, accessor := range *p.topicInfos {
+			if accessor.Reader.IsInitialized() {
+				accessor.Reader.delete()
 			}
+			if accessor.Writer.IsInitialized() {
+				// only for qos.delete()
+				err := accessor.Writer.delete()
+				if err != nil {
+					return err
+				}
+			}
+			// only for qos.delete()
+			topic.delete()
 		}
-		// only for qos.delete()
-		topic.delete()
 	}
 	for _, waitSet := range p.WaitSets {
 		err := waitSet.delete()
