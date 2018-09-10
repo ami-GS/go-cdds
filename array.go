@@ -39,6 +39,14 @@ func (info *SampleInfo) IsValid() bool {
 	return bool((*C.dds_sample_info_t)(info).valid_data)
 }
 
+func (info *SampleInfo) GetSrcTimeStamp() Time {
+	return Time(info.source_timestamp)
+}
+
+func (info *SampleInfo) GetInstanceState() InstanceState {
+	return InstanceState(info.instance_state)
+}
+
 type Array struct {
 	*RawArray
 	infoElmSize uint32
