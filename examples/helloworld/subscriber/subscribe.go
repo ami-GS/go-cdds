@@ -60,24 +60,34 @@ func main() {
 
 	// 3. basic loop
 	//samples := reader.Alloc(MAX_SAMPLES)
+	var num int
 	var samples *cdds.Array
 	for {
 		// WARN: Just using AllocRead() use much heap space
 		if samples == nil {
-			samples, err = reader.AllocRead(MAX_SAMPLES, MAX_SAMPLES, false)
+			samples, num, err = reader.AllocRead(MAX_SAMPLES, MAX_SAMPLES, true)
 		} else {
-			err = reader.ReadWithBuff(samples, false)
+			num, err = reader.ReadWithBuff(samples, true)
 		}
 
 		if err != nil {
 			panic(err)
 		}
-		if samples.IsValidAt(0) {
-			msg = (*C.HelloWorldData_Msg)(samples.At(0))
-			fmt.Print("=== [Subscriber] Received : ")
-			fmt.Printf("Message (%d, %s)\n", msg.userID, C.GoString(msg.message))
-			break
+		for i := 0; ; {
+			if samples.IsValidAt(i) {
+				msg = (*C.HelloWorldData_Msg)(samples.At(i))
+				fmt.Print("=== [Subscriber] Received : ")
+				fmt.Printf("Message %d:(%d, %s)\n", i, msg.userID, C.GoString(msg.message))
+				i++
+				if i >= num {
+					goto END
+				}
+			} else {
+				break
+			}
+
 		}
 		cdds.SleepFor(time.Millisecond * 20)
 	}
+END:
 }
