@@ -25,6 +25,14 @@ func (w *WaitSet) Wait(size int, d time.Duration) (*RawArray, error) {
 
 }
 
+func (w *WaitSet) SetTrigger(trigger bool) error {
+	ret := C.dds_waitset_set_trigger(w.GetEntity(), C.bool(trigger))
+	if ret < 0 {
+		return CddsErrorType(ret)
+	}
+	return nil
+}
+
 func (w *WaitSet) Attach(entity EntityI, arg EntityI) error {
 	ret := C.dds_waitset_attach(w.GetEntity(), entity.GetEntity(), C.dds_attach_t(arg.GetEntity()))
 	if ret < 0 {

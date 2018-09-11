@@ -41,3 +41,11 @@ const (
 
 	AnyState ReadConditionState = C.DDS_ANY_STATE
 )
+
+type InstanceState uint32
+
+const (
+	IstAlive             InstanceState = C.DDS_ALIVE_INSTANCE_STATE
+	IstNotAliveDisposed  InstanceState = C.DDS_NOT_ALIVE_DISPOSED_INSTANCE_STATE
+	IstNotAliceNoWriters InstanceState = C.DDS_NOT_ALIVE_NO_WRITERS_INSTANCE_STATE
+)
