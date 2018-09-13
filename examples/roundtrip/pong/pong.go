@@ -65,7 +65,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	drQos.delete()
 
 	waitSet, err := part.CreateWaitSet()
 	if err != nil {
