@@ -21,6 +21,9 @@ type Entity struct {
 func (e Entity) GetEntity() C.dds_entity_t {
 	return e.ent
 }
+func (e *Entity) SetEntity(val uint32) {
+	e.ent = C.dds_entity_t(val)
+}
 func (e *Entity) delete() error {
 	ret := C.dds_delete(e.GetEntity())
 	if ret < 0 {

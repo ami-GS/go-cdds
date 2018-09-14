@@ -71,15 +71,15 @@ func main() {
 		panic(err)
 	}
 
-	var rdcond *cdds.ReadCondition
+	var rdcond cdds.ReadCondition
 	if listener == nil {
-		rdcond = rd.CreateReadCondition(cdds.AnyState)
+		rdcond = *rd.CreateReadCondition(cdds.AnyState)
 		err := waitSet.Attach(rdcond, rd)
 		if err != nil {
 			panic(err)
 		}
 	} else {
-		rdcond = nil
+		rdcond.SetEntity(0)
 	}
 	err = waitSet.Attach(waitSet, waitSet)
 	if err != nil {
