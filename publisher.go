@@ -14,5 +14,5 @@ func (p *Publisher) CreateWriter(topic interface{}, qos *QoS, listener *Listener
 }
 
 func (p *Publisher) Delete() error {
-	return (*Participant)(p).Delete(false)
+	return (*Participant)(p).Delete()
 }

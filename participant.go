@@ -20,6 +20,8 @@ type Participant struct {
 	Publishers  []Publisher
 	Subscribers []Subscriber
 	WaitSets    []WaitSet
+
+	isTopLevel bool
 }
 
 func CreateParticipant(domainID DomainID, qos *QoS, listener *Listener) (*Participant, error) {
@@ -34,6 +36,7 @@ func CreateParticipant(domainID DomainID, qos *QoS, listener *Listener) (*Partic
 		Entity:            Entity{ent: tmp, qos: qos},
 		topicNameToEntity: &topicNameToEntity,
 		topicInfos:        &topicInfos,
+		isTopLevel:        true,
 	}, nil
 }
 
@@ -191,6 +194,7 @@ func (p *Participant) CreatePublisher(qos *QoS, listener *Listener) (*Publisher,
 		Entity:            Entity{ent: tmp, qos: qos},
 		topicNameToEntity: p.topicNameToEntity,
 		topicInfos:        p.topicInfos,
+		isTopLevel:        false,
 	})
 
 	p.Publishers = append(p.Publishers, pub)
@@ -207,6 +211,7 @@ func (p *Participant) CreateSubscriber(qos *QoS, listener *Listener) (*Subscribe
 		Entity:            Entity{ent: tmp, qos: qos},
 		topicNameToEntity: p.topicNameToEntity,
 		topicInfos:        p.topicInfos,
+		isTopLevel:        false,
 	})
 	p.Subscribers = append(p.Subscribers, sub)
 	return &sub, nil
@@ -226,8 +231,8 @@ func (p *Participant) CreateWaitSet() (*WaitSet, error) {
 	return &wait, nil
 }
 
-func (p *Participant) Delete(isTopLevel bool) error {
-	if isTopLevel {
+func (p *Participant) Delete() error {
+	if p.isTopLevel {
 		for topic, accessor := range *p.topicInfos {
 			if accessor.Reader.IsInitialized() {
 				accessor.Reader.delete()
@@ -262,7 +267,7 @@ func (p *Participant) Delete(isTopLevel bool) error {
 		}
 	}
 
-	if isTopLevel {
+	if p.isTopLevel {
 		// Delete of participant propagete writer/reader/pub/sub entity implicitly
 		return p.Entity.delete()
 	}

@@ -315,7 +315,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	err = part.Delete(true)
+	err = part.Delete()
 	if err != nil {
 		panic(err)
 	}

@@ -134,6 +134,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	part.Delete(true)
+	part.Delete()
 	// end finalize_dds
 }

@@ -14,5 +14,5 @@ func (p *Subscriber) CreateReader(topic interface{}, elmSize uint32, qos *QoS, l
 }
 
 func (p *Subscriber) Delete() error {
-	return (*Participant)(p).Delete(false)
+	return (*Participant)(p).Delete()
 }
